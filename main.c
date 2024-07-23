@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <termios.h>
 #include <unistd.h>
 #include "maze.h"
@@ -25,11 +26,11 @@ int getNextValidStepDirection(maze_t *maze) {
             case 's':
                 dir = 3; break;
             case 'q':
-                printf("You pressed 'q'.\nExiting...\n");
+                printf("\nYou pressed 'q'.\nExiting...\n");
                 exit(EXIT_SUCCESS);
         }
         if(!mzGetCurrentConnectionInDirection(maze, dir)) {
-            printf("you can't go there :/\n");
+            printf("\nyou can't go there :/\n");
             dir = -1;
         }
     }
@@ -49,32 +50,37 @@ void step(maze_t *maze) {
 }
 
 int play(maze_t *maze) {
-
+    utilsClearScreen();
     printf("Hi! Welcome to mazer!\nYou are the 'x'.\nWalk to one of the next rooms with (w|a|s|d)\n");
     printf("Reach the star at the bottom left to win!\n");
-    printf("\n");
-    mzPrintCurrentPos(maze);
+    printf("Press any button to start\n");
+    getc(stdin);
+    utilsClearScreen();
+    
+    
     mzPrintCurrentRoom(maze);
-
-
     while(!mzIsFinished(maze)) {
         step(maze);
-        mzPrintCurrentPos(maze);
+        utilsClearScreen();
         mzPrintCurrentRoom(maze);
     }
 
-    printf("Congratulations!\nYou have won!\n");
+    printf("\nCongratulations!\nYou have won!\n");
     return 0;
 }
 
 
-void disableRawMode() {
+void resetTerminalSettings() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+    printf("\33[?25h"); // show cursor
+    fflush(stdout);
 }
 
-void enableRawMode() {
+void setupTerminal() {
+    printf("\33[?25l"); // hide cursor
+    fflush(stdout);
     tcgetattr(STDIN_FILENO, &orig_termios);
-    atexit(disableRawMode);
+    atexit(resetTerminalSettings);
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(STDIN_FILENO, TCSANOW, &raw);
@@ -86,14 +92,23 @@ int main(int argc, char *argv[]) {
 
     if(argc == 1){
         maze = mzGetSampleMaze();
-    } else if(argc == 2) {
+    } else if(argc == 2){
         maze = mzParse(argv[1]);
         if(maze==NULL) exit(EXIT_FAILURE);
+    } else if(argc == 3) {
+        if(!strncmp("--convert", argv[1], strlen("--convert"))) {
+            if(mzConvertFile(argv[2])==-1) {
+                exit(EXIT_FAILURE);
+            }
+            printf("Successfully converted file \"%s\"\n", argv[2]);
+            exit(EXIT_SUCCESS);
+        }
+        
     }
 
 
 
-    enableRawMode();
+    setupTerminal();
     play(maze);
 
 

@@ -22,3 +22,9 @@ int utilsParseVec(FILE *f, vec_t *vec) {
     vec->y = y;
     return 0;
 }
+
+void utilsClearScreen() {
+    printf("\033[2J"); // clear the screen
+    printf("\033[H"); // move cursor to home
+    fflush(stdout);
+}

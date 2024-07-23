@@ -31,6 +31,9 @@ void mzFree(maze_t *maze);
 // returns a 4x4 sample maze
 maze_t *mzGetSampleMaze();
 
+// converts .mzh to .mzb
+int mzConvertFile(char *filename);
+
 // parses maze from filename
 maze_t *mzParse(char *filename);
 
