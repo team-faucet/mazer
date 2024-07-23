@@ -1,6 +1,7 @@
 #include "linked_list.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct ll_node {
     void* data;
@@ -34,12 +35,16 @@ void llDestroy(linked_list* list) {
     free(list);
 }
 
-int llPushFront(linked_list* list, const void* data) {
+int llPushFront(linked_list* list, void* data) {
     ll_node* node = malloc(sizeof(*node));
     if (NULL != node) {
-        *node = *list->head.next;
+        *node = list->head;
         list->head.data = data;
         list->head.next = node;
+
+        if (list->tail == &list->head) {
+            list->tail = node;
+        }
 
         return 0;
     }
@@ -47,12 +52,14 @@ int llPushFront(linked_list* list, const void* data) {
     return -1;
 }
 
-int llPushBack(linked_list* list, const void* data) {
+int llPushBack(linked_list* list, void* data) {
     ll_node* node = malloc(sizeof(*node));
     if (NULL != node) {
         *node = LL_TAIL_INITIALIZER;
-        list->head.data = data;
+
+        list->tail->data = data;
         list->tail->next = node;
+        
         list->tail = node;
 
         return 0;
@@ -68,6 +75,10 @@ int llPopFront(linked_list* list, void** pdata) {
         list->head.data = next->data;
         list->head.next = next->next;
         free(next);
+
+        if (NULL == list->head.next) {
+            list->tail = &list->head;
+        }
 
         return 0;
     }
@@ -93,10 +104,12 @@ int llPopBack(linked_list* list, void** pdata) {
 }
 
 void llPrint(linked_list* list) {
-    ll_node* node = list->head.next;
-    while (node != &list->head) {
+    ll_node* node = &list->head;
+    while (node != list->tail) {
         if (printf("%p\n", node->data) < 0)
             abort();
         node = node->next;
     }
+    if (printf("\n") < 0)
+        abort();
 }
