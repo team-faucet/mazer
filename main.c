@@ -28,7 +28,7 @@ int getNextValidStepDirection(maze_t *maze) {
                 printf("You pressed 'q'.\nExiting...\n");
                 exit(EXIT_SUCCESS);
         }
-        if(!mzGetCurrentBorder(maze, dir)) {
+        if(!mzGetCurrentConnectionInDirection(maze, dir)) {
             printf("you can't go there :/\n");
             dir = -1;
         }
@@ -94,6 +94,5 @@ int main(int argc, char *argv[]) {
     play(maze);
 
 
-    free(maze->connections);
-    free(maze);
+    mzFree(maze);
 }

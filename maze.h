@@ -1,11 +1,7 @@
 #ifndef MAZE_H
 #define MAZE_H
 #include <stdbool.h>
-
-typedef struct vec {
-    int x;
-    int y;
-} vec_t;
+#include "utils.h"
 
 typedef struct maze {
     vec_t size;
@@ -14,20 +10,34 @@ typedef struct maze {
     char *connections;
 } maze_t;
 
+// sets connection at index
+void mzSetConnByIndex(maze_t *maze, int index, char val);
 
-maze_t *mzGetSampleMaze();
-
-maze_t *mzParseMaze(char *filename);
-
+// true if connection is there
 bool mzGetConnByIndex(maze_t *maze, int index);
 
-// direction dir is: 0 left, 1 up, 2 right, 3 down
-bool mzGetCurrentBorder(maze_t *maze, int dir);
+/*
+returns ture, if the player can walk from his current position in direction dir
+dir is: 0 left, 1 up, 2 right, 3 down
+*/
+bool mzGetCurrentConnectionInDirection(maze_t *maze, int dir);
+
+maze_t *mzMalloc(vec_t dims);
+
+void mzFree(maze_t *maze);
+
+// returns a 4x4 sample maze
+maze_t *mzGetSampleMaze();
+
+// parses maze from filename
+maze_t *mzParseMaze(char *filename);
+
+bool mzIsFinished(maze_t *maze);
 
 void mzPrintCurrentPos(maze_t *maze);
 
 void mzPrintCurrentRoom(maze_t *maze);
 
-bool mzIsFinished(maze_t *maze);
+
 
 #endif
