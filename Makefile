@@ -1,5 +1,8 @@
 CFLAGS = -pedantic -Wall -Wextra
 
+SOURCES = $(shell find -maxdepth 1 -name '*.c')
+OBJS    = $(SOURCES:%.c=%.o)
+
 .PHONY: all debug sanitize clean test
 all: mazer
 
@@ -14,7 +17,7 @@ sanitize: CFLAGS += -fsanitize=address
 sanitize: LDFLAGS += -lasan
 sanitize: all
 
-mazer: main.o maze.o utils.o
+mazer: $(OBJS)
 	$(CC) $^ -o $@
 
 main.o: main.c maze.h
