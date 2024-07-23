@@ -7,7 +7,7 @@ typedef struct maze {
     vec_t size;
     vec_t pos;
     vec_t win;
-    char *connections;
+    unsigned char *connections;
 } maze_t;
 
 // sets connection at index
@@ -22,6 +22,8 @@ dir is: 0 left, 1 up, 2 right, 3 down
 */
 bool mzGetCurrentConnectionInDirection(maze_t *maze, int dir);
 
+int mzGetNumberOfConnections(maze_t *maze);
+
 maze_t *mzMalloc(vec_t dims);
 
 void mzFree(maze_t *maze);
@@ -30,7 +32,7 @@ void mzFree(maze_t *maze);
 maze_t *mzGetSampleMaze();
 
 // parses maze from filename
-maze_t *mzParseMaze(char *filename);
+maze_t *mzParse(char *filename);
 
 bool mzIsFinished(maze_t *maze);
 
