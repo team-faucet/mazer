@@ -82,15 +82,18 @@ void enableRawMode() {
 
 
 int main(int argc, char *argv[]) {
-    enableRawMode();
     maze_t *maze;
+
     if(argc == 1){
         maze = mzGetSampleMaze();
     } else if(argc == 2) {
-        maze = mzParseMaze(argv[1]);
+        maze = mzParse(argv[1]);
         if(maze==NULL) exit(EXIT_FAILURE);
     }
-    
+
+
+
+    enableRawMode();
     play(maze);
 
 

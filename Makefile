@@ -1,4 +1,4 @@
-CFLAGS = -pedantic -Wall
+CFLAGS = -pedantic -Wall -Wextra
 
 .PHONY: all debug sanitize clean test
 all: mazer
@@ -14,7 +14,7 @@ sanitize: CFLAGS += -fsanitize=address
 sanitize: LDFLAGS += -lasan
 sanitize: all
 
-mazer: main.o maze.o
+mazer: main.o maze.o utils.o
 	$(CC) $^ -o $@
 
 main.o: main.c maze.h
