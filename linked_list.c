@@ -1,115 +1,96 @@
 #include "linked_list.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct ll_node {
-    void* data;
-    struct ll_node* next;
+  void *data;
+  struct ll_node *prev;
+  struct ll_node *next;
 } ll_node;
 
-const ll_node LL_TAIL_INITIALIZER = {NULL, NULL};
-
 struct linked_list {
-    ll_node head;
-    ll_node* tail;
+  ll_node sentinel;
 };
 
-linked_list* llCreate(void) {
-    linked_list* list = malloc(sizeof(*list));
-    if (NULL != list) {
-        list->tail = &list->head;
-        *list->tail = LL_TAIL_INITIALIZER;
-    }
+linked_list *llCreate(void) {
+  linked_list *list = malloc(sizeof(*list));
+  if (NULL != list) {
+    list->sentinel = (ll_node){NULL, &list->sentinel, &list->sentinel};
+  }
 
-    return list;
+  return list;
 }
 
-void llDestroy(linked_list* list) {
-    while (list->tail != &list->head) {
-        ll_node* next = list->head.next;
-        list->head.data = next->data;
-        list->head.next = next->next;
-        free(next);
-    }
-    free(list);
+void llDestroy(linked_list *list) {
+  for (ll_node *it = list->sentinel.next; list->sentinel.next != &list->sentinel; ) {
+    list->sentinel.next = it->next;
+    free(it);
+  }
+  free(list);
 }
 
-int llPushFront(linked_list* list, void* data) {
-    ll_node* node = malloc(sizeof(*node));
-    if (NULL != node) {
-        *node = list->head;
-        list->head.data = data;
-        list->head.next = node;
+int llPushFront(linked_list *list, void *data) {
+  ll_node *node = malloc(sizeof(*node));
+  if (NULL != node) {
+    *node = (ll_node){data, &list->sentinel, list->sentinel.next};
+    
+    list->sentinel.next->prev = node;
+    list->sentinel.next = node;
 
-        if (list->tail == &list->head) {
-            list->tail = node;
-        }
+    return 0;
+  }
 
-        return 0;
-    }
-
-    return -1;
+  return -1;
 }
 
-int llPushBack(linked_list* list, void* data) {
-    ll_node* node = malloc(sizeof(*node));
-    if (NULL != node) {
-        *node = LL_TAIL_INITIALIZER;
+int llPushBack(linked_list *list, void *data) {
+  ll_node *node = malloc(sizeof(*node));
+  if (NULL != node) {
+    *node = (ll_node){data, list->sentinel.prev, &list->sentinel};
 
-        list->tail->data = data;
-        list->tail->next = node;
-        
-        list->tail = node;
+    list->sentinel.prev->next = node;
+    list->sentinel.prev = node;
 
-        return 0;
-    }
+    return 0;
+  }
 
-    return -1;
+  return -1;
 }
 
-int llPopFront(linked_list* list, void** pdata) {
-    if (list->tail != &list->head) {
-        ll_node* next = list->head.next;
-        *pdata = list->head.data;
-        list->head.data = next->data;
-        list->head.next = next->next;
-        free(next);
+int llPopFront(linked_list *list, void **pdata) {
+  if (list->sentinel.next != &list->sentinel) {
+    ll_node *front = list->sentinel.next;
+    *pdata = front->data;
+    list->sentinel.next = front->next;
+    front->next->prev = &list->sentinel;
+    free(front);
 
-        if (NULL == list->head.next) {
-            list->tail = &list->head;
-        }
+    return 0;
+  }
 
-        return 0;
-    }
-
-    return -1;
+  return -1;
 }
 
-int llPopBack(linked_list* list, void** pdata) {
-    if (list->tail != &list->head) {
-        ll_node* prev = &list->head;
-        while (prev->next != list->tail) {
-            prev = prev->next;
-        }
-        *pdata = prev->data;
-        *prev = *list->tail;
-        free(list->tail);
-        list->tail = prev;
+int llPopBack(linked_list *list, void **pdata) {
+  if (list->sentinel.prev != &list->sentinel) {
+    ll_node *back = list->sentinel.prev;
+    *pdata = back->data;
+    list->sentinel.prev = back->prev;
+    back->prev->next = &list->sentinel;
+    free(back);
 
-        return 0;
-    }
+    return 0;
+  }
 
-    return -1;
+  return -1;
 }
 
-void llPrint(linked_list* list) {
-    ll_node* node = &list->head;
-    while (node != list->tail) {
-        if (printf("%p\n", node->data) < 0)
-            abort();
-        node = node->next;
-    }
-    if (printf("\n") < 0)
-        abort();
+void llPrint(linked_list *list) {
+  for (ll_node *it = list->sentinel.next; it != &list->sentinel; it = it->next) {
+    if (printf("%p\n", it->data) < 0)
+      abort();
+  }
+  if (printf("\n") < 0)
+    abort();
 }
