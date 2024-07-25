@@ -52,6 +52,7 @@ maze_t *mzMalloc(vec_t dims) {
     int n_conns = mzGetNumberOfConnections(maze);
     int n_bytes = n_conns/8 + (n_conns%8!=0);
     maze->connections = malloc(n_bytes);
+    memset(maze->connections, 0, n_bytes);
     return maze;
 }
 
@@ -245,6 +246,7 @@ bool mzIsFinished(maze_t *maze) {
 }
 
 void mzPrintCurrentPos(maze_t *maze) {
+    printf("\n");
     printf("|"); for(int i=0; i < maze->size.x; i++) printf("---"); printf("|\n");
     for(int y=0; y < maze->size.y; y++) {
         printf("|");

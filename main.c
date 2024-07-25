@@ -5,9 +5,14 @@
 #include <termios.h>
 #include <unistd.h>
 #include "maze.h"
+#include "mazegen.h"
 
 struct termios orig_termios;
 
+void exitGame() {
+    printf("\nYou pressed 'q'.\nExiting...\n");
+    exit(EXIT_SUCCESS);
+}
 
 int getNextValidStepDirection(maze_t *maze) {
     int dir = -1;
@@ -54,18 +59,21 @@ int play(maze_t *maze) {
     printf("Hi! Welcome to mazer!\nYou are the 'x'.\nWalk to one of the next rooms with (w|a|s|d)\n");
     printf("Reach the star at the bottom left to win!\n");
     printf("Press any button to start\n");
-    getc(stdin);
+    if(getc(stdin)=='q') exitGame();
     utilsClearScreen();
     
     
     mzPrintCurrentRoom(maze);
+    mzPrintCurrentPos(maze);
     while(!mzIsFinished(maze)) {
         step(maze);
         utilsClearScreen();
         mzPrintCurrentRoom(maze);
+        mzPrintCurrentPos(maze);
     }
 
     printf("\nCongratulations!\nYou have won!\n");
+    getc(stdin);
     return 0;
 }
 
@@ -91,7 +99,7 @@ int main(int argc, char *argv[]) {
     maze_t *maze;
 
     if(argc == 1){
-        maze = mzGetSampleMaze();
+        maze = mgGenerate(10);
     } else if(argc == 2){
         maze = mzParse(argv[1]);
         if(maze==NULL) exit(EXIT_FAILURE);
