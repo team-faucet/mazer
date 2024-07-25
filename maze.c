@@ -89,7 +89,8 @@ maze_t *mzParseH(char *filename) {
     if(dims.x <1 || dims.y<1) {errorstr="maze dimensions have to be >0"; goto exit_error;}
     maze_t *m = mzMalloc(dims);
     if(!utilsNextCharIsIn(f, ",\n")) {{errorstr="assumed ',' or newline'"; goto exit_error;}}
-    if(utilsParseVec(f, &(m->pos))==-1) {errorstr="parsing pos vector"; goto exit_error;}
+    if(utilsParseVec(f, &(m->start))==-1) {errorstr="parsing pos vector"; goto exit_error;}
+    m->pos = m->start;
     if(!utilsNextCharIsIn(f, ",\n")) {{errorstr="assumed ',' or newline"; goto exit_error;}}
     if(utilsParseVec(f, &(m->win))==-1) {errorstr="parsing win vector"; goto exit_error;}
 
@@ -132,7 +133,7 @@ maze_t *mzParseH(char *filename) {
 struct mazeBinaryHead {
     char fileinfo; //this is space reserved for identification that could be used in later versions
     vec_t size;
-    vec_t pos;
+    vec_t start;
     vec_t win;
 };
 
@@ -156,7 +157,8 @@ maze_t *mzParseB(char *filename) {
     if(head.size.x <1 || head.size.y<1) {errorstr="maze dimensions have to be >0"; goto exit_error;}
     // init maze_t
     maze_t *maze = mzMalloc(head.size);
-    maze->pos = head.pos;
+    maze->pos = head.start;
+    maze->start = head.start;
     maze->win = head.win;
     int n_conns = mzGetNumberOfConnections(maze);
     size_t n_bytes = n_conns/8 + (n_conns%8!=0);
@@ -182,7 +184,7 @@ int mzStoreB(maze_t *maze, char *filename) {
     // convert maze into binaryMaze
     struct mazeBinaryHead head;
     head.size = maze->size;
-    head.pos = maze->pos;
+    head.start = maze->start;
     head.win = maze->win;
     
     int n_conns = mzGetNumberOfConnections(maze);

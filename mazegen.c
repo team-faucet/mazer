@@ -142,6 +142,7 @@ maze_t *mgGenerate(char dim) {
 
     // gen random start
     vec_t start = {rand()%dim,rand()%dim};
+    maze->start = start;
     maze->pos = start;
     // gen random goal
     vec_t goal;

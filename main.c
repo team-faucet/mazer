@@ -73,7 +73,11 @@ int play(maze_t *maze) {
     }
 
     printf("\nCongratulations!\nYou have won!\n");
-    getc(stdin);
+    printf("press \"s\" to save the maze, press any other key to exit\n");
+    if(getc(stdin) == 's') {
+        if(mzStoreB(maze, "saved_maze.mzb") == -1) printf("error when trying to save :/\n");
+        else printf("Saved successfully to saved_maze.mzb!\n");
+    }
     return 0;
 }
 
@@ -99,7 +103,7 @@ int main(int argc, char *argv[]) {
     maze_t *maze;
 
     if(argc == 1){
-        maze = mgGenerate(10);
+        maze = mgGenerate(12);
     } else if(argc == 2){
         maze = mzParse(argv[1]);
         if(maze==NULL) exit(EXIT_FAILURE);
