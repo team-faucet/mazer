@@ -14,6 +14,16 @@ void exitGame() {
     exit(EXIT_SUCCESS);
 }
 
+char *getDirectionString(int dir) {
+    switch(dir){
+        case 0: return "left";
+        case 1: return "up";
+        case 2: return "right";
+        case 3: return "down";
+    }
+    return "";
+}
+
 int getNextValidStepDirection(maze_t *maze) {
     int dir = -1;
     for(int c; dir == -1;) {
@@ -35,7 +45,8 @@ int getNextValidStepDirection(maze_t *maze) {
                 exit(EXIT_SUCCESS);
         }
         if(!mzGetCurrentConnectionInDirection(maze, dir)) {
-            printf("\nyou can't go there :/\n");
+            utilsEraseLine();
+            printf("you can't go %s :/", getDirectionString(dir));
             dir = -1;
         }
     }
@@ -43,39 +54,56 @@ int getNextValidStepDirection(maze_t *maze) {
     return dir;
 }
 
-void step(maze_t *maze) {
+int step(maze_t *maze) {
     int dir = getNextValidStepDirection(maze);
-    for(int i=0;i<25;i++) printf("\n");
     switch(dir){
-        case 0: maze->pos.x--; printf("You went left\n"); break;
-        case 1: maze->pos.y--; printf("You went up\n"); break;
-        case 2: maze->pos.x++; printf("You went right\n"); break;
-        case 3: maze->pos.y++; printf("You went down\n"); break;
+        case 0: maze->pos.x--; break;
+        case 1: maze->pos.y--; break;
+        case 2: maze->pos.x++; break;
+        case 3: maze->pos.y++; break;
     }
+    return dir;
+}
+
+void printWinScreen() {
+    utilsClearScreen();
+    printf("\n");
+    printf("##  ##  ######  ##  ##      ##      ##  ######  ####    ######        ##  ######      ##\n");
+    printf("##  ##  ##  ##  ##  ##      ####  ####  ##  ##  ##  ##  ##            ##    ##        ##\n");
+    printf("##  ##  ##  ##  ##  ##      ##  ##  ##  ######  ##  ##  ####          ##    ##        ##\n");
+    printf("  ##    ##  ##  ##  ##      ##      ##  ##  ##  ##  ##  ##            ##    ##          \n");
+    printf("  ##    ######  ######      ##      ##  ##  ##  ####    ######        ##    ##        ##\n");
+    printf("\n\n");
 }
 
 int play(maze_t *maze) {
     utilsClearScreen();
     printf("Hi! Welcome to mazer!\nYou are the 'x'.\nWalk to one of the next rooms with (w|a|s|d)\n");
-    printf("Reach the star at the bottom left to win!\n");
+    printf("Reach the star to win!\n");
     printf("Press any button to start\n");
     if(getc(stdin)=='q') exitGame();
     utilsClearScreen();
     
     
-    mzPrintCurrentRoom(maze);
     mzPrintCurrentPos(maze);
+    mzPrintCurrentRoom(maze);
     while(!mzIsFinished(maze)) {
-        step(maze);
+        int dir = step(maze);
         utilsClearScreen();
-        mzPrintCurrentRoom(maze);
         mzPrintCurrentPos(maze);
+        mzPrintCurrentRoom(maze);
+        printf("You went %s", getDirectionString(dir));
+        fflush(stdout);
     }
 
-    printf("\nCongratulations!\nYou have won!\n");
-    printf("press \"s\" to save the maze, press any other key to exit\n");
-    if(getc(stdin) == 's') {
-        if(mzStoreB(maze, "saved_maze.mzb") == -1) printf("error when trying to save :/\n");
+    printWinScreen();
+    
+    printf("press \"s\" to save the maze, press q to exit\n");
+    printf("\n");
+    int c;
+    for(c=getc(stdin); c!='s' && c!='q'; c=getc(stdin));
+    if(c == 's') {
+        if(mzStoreB(maze, "saved_maze.mzb") == -1) perror("error when trying to save :/\n");
         else printf("Saved successfully to saved_maze.mzb!\n");
     }
     return 0;
@@ -103,7 +131,7 @@ int main(int argc, char *argv[]) {
     maze_t *maze;
 
     if(argc == 1){
-        maze = mgGenerate(12);
+        maze = mgGenerate(4);
     } else if(argc == 2){
         maze = mzParse(argv[1]);
         if(maze==NULL) exit(EXIT_FAILURE);

@@ -16,4 +16,6 @@ int utilsParseVec(FILE *f, vec_t *vec);
 
 void utilsClearScreen();
 
+void utilsEraseLine();
+
 #endif

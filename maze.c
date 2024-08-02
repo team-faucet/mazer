@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "utils.h"
 
 void mzSetConnByIndex(maze_t *maze, int index, char val) {
@@ -228,8 +231,11 @@ int mzConvertFile(char *filename){
 }
 
 maze_t *mzParse(char *filename) {
+    struct stat buf;
+    if(stat(filename, &buf) == -1) {perror("stat"); return NULL;}
+    if(!S_ISREG(buf.st_mode)) { fprintf(stderr, "%s is not a file\n", filename); return NULL;}
     char *ext = strrchr(filename, '.');
-    if (ext==NULL){fprintf(stderr,"file extension not found, has to be .mzh or .mzb"); return NULL;}
+    if(ext==NULL){ fprintf(stderr, "file extension has to be .mzh or .mzb\n"); return NULL;}
 
 
     if(!strcmp(ext, ".mzh")) {
@@ -239,7 +245,7 @@ maze_t *mzParse(char *filename) {
         return mzParseB(filename);
     }
 
-    fprintf(stderr, "file extension has to be .mzh or .mzb");
+    fprintf(stderr, "file extension has to be .mzh or .mzb\n");
     return NULL;
 }
 
@@ -288,5 +294,6 @@ void mzPrintCurrentRoom(maze_t *maze) {
 
     if(bot) printf("#######   #######\n#######   #######");
     else printf("#################\n#################");
+    printf("\n");
 }
 

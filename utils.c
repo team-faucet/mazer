@@ -28,3 +28,7 @@ void utilsClearScreen() {
     printf("\033[H"); // move cursor to home
     fflush(stdout);
 }
+
+void utilsEraseLine() {
+    printf("\33[2K\r");
+}
