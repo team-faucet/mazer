@@ -18,6 +18,12 @@ int getmDurationSince(struct timeval time_start) {
     return duration*1000 + uduration/1000;
 }
 
+void printCurrentTime(struct timeval time_start) {
+    int mduration = getmDurationSince(time_start);
+    printf("%d.%03ds\n", mduration/1000, mduration);
+}
+
+
 char *getDirectionString(int dir) {
     switch(dir){
         case 0: return "left";
@@ -84,7 +90,9 @@ void play(maze_t *maze) {
     utilsClearScreen();
     printf("Hi! Welcome to mazer!\nYou are the 'x'.\nWalk to one of the next rooms with (w|a|s|d)\n");
     printf("Reach the star to win!\n");
-    printf("Do that as fast as you can.\n\n");
+    printf("Do that as fast as you can.");
+    if(maze->besttime != -1) printf("Best time is: %d.%03ds\n", maze->besttime/1000, maze->besttime);
+    printf("\n\n");
     printf("Press any button to start\n");
     getc(stdin);
     utilsClearScreen();
@@ -93,11 +101,13 @@ void play(maze_t *maze) {
     mzPrintCurrentRoom(maze);
     struct timeval time_start;
     if(gettimeofday(&time_start, NULL) == -1) {perror("gettimeofday"); exit(1);}
+    printCurrentTime(time_start);
     while(!mzIsFinished(maze)) {
         int dir = step(maze);
         utilsClearScreen();
         mzPrintCurrentPos(maze);
         mzPrintCurrentRoom(maze);
+        printCurrentTime(time_start);
         printf("You went %s", getDirectionString(dir));
         fflush(stdout);
     }
@@ -106,13 +116,19 @@ void play(maze_t *maze) {
 
     printWinScreen();
     
-    printf("Time:\n%d.%03ds\n\n", mduration/1000, mduration);
-    printf("press \"s\" to save the maze, press q to exit\n");
-    printf("\n");
-    int c;
-    for(c=getc(stdin); c!='s' && c!='q'; c=getc(stdin));
-    if(c == 's') {
-        if(mzStoreB(maze, "saved_maze.mzb") == -1) perror("error when trying to save :/\n");
-        else printf("Saved successfully to saved_maze.mzb!\n");
+    printf("Your time: %d.%03ds\n", mduration/1000, mduration);
+    if(maze->besttime != -1) {
+        printf("Best time is: %d.%03ds\n", maze->besttime/1000, maze->besttime);
+        if (maze->besttime > mduration) {
+            printf("Congratulations, You beat it!\n");
+            maze->besttime = mduration;
+        } else {
+            printf("Better luck next time!\n");
+        }
+    } else {
+        maze->besttime = mduration;
     }
+
+    if(mzStoreTemp(maze) == -1) {fprintf(stderr, "err while trying to save the maze");}
+    
 }

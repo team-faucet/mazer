@@ -18,4 +18,6 @@ void utilsClearScreen();
 
 void utilsEraseLine();
 
+int utilsParsePosInt(char *str);
+
 #endif

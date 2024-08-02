@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include "utils.h"
 
+#define STD_SAVEPATH "/tmp/saved_maze.mzb"
+
 void mzSetConnByIndex(maze_t *maze, int index, char val) {
     int true_index = index/8;
     int offset = 7-index%8;
@@ -56,6 +58,7 @@ maze_t *mzMalloc(vec_t dims) {
     int n_bytes = n_conns/8 + (n_conns%8!=0);
     maze->connections = malloc(n_bytes);
     memset(maze->connections, 0, n_bytes);
+    maze->besttime = -1;
     return maze;
 }
 
@@ -138,6 +141,7 @@ struct mazeBinaryHead {
     vec_t size;
     vec_t start;
     vec_t win;
+    int besttime;
 };
 
 /*
@@ -163,6 +167,7 @@ maze_t *mzParseB(char *filename) {
     maze->pos = head.start;
     maze->start = head.start;
     maze->win = head.win;
+    maze->besttime = head.besttime;
     int n_conns = mzGetNumberOfConnections(maze);
     size_t n_bytes = n_conns/8 + (n_conns%8!=0);
     // read in connections
@@ -189,6 +194,7 @@ int mzStoreB(maze_t *maze, char *filename) {
     head.size = maze->size;
     head.start = maze->start;
     head.win = maze->win;
+    head.besttime = maze->besttime;
     
     int n_conns = mzGetNumberOfConnections(maze);
     size_t n_bytes = n_conns/8 + (n_conns%8!=0);
@@ -247,6 +253,14 @@ maze_t *mzParse(char *filename) {
 
     fprintf(stderr, "file extension has to be .mzh or .mzb\n");
     return NULL;
+}
+
+int mzStoreTemp(maze_t *maze) {
+    return mzStoreB(maze, STD_SAVEPATH);
+}
+
+maze_t *mzParseTemp() {
+    return mzParse(STD_SAVEPATH);
 }
 
 bool mzIsFinished(maze_t *maze) {

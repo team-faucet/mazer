@@ -8,6 +8,7 @@ typedef struct maze {
     vec_t pos;
     vec_t start;
     vec_t win;
+    int besttime;
     unsigned char *connections;
 } maze_t;
 
@@ -36,6 +37,12 @@ int mzStoreB(maze_t *maze, char *filename);
 
 // converts .mzh to .mzb
 int mzConvertFile(char *filename);
+
+// stores maze in the temp folder
+int mzStoreTemp(maze_t *maze);
+
+// parses maze that was stored in the temp folder
+maze_t *mzParseTemp();
 
 // parses maze from filename
 maze_t *mzParse(char *filename);

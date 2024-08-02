@@ -32,3 +32,16 @@ void utilsClearScreen() {
 void utilsEraseLine() {
     printf("\33[2K\r");
 }
+
+int utilsParsePosInt(char *str) {
+    int result = 0;
+    for (int i=0; str[i]!='\0'; i++) {
+        char c = str[i];
+            
+        if (c >= '0' && c <= '9'){
+            result = 10 * result + c - '0';
+        }
+        else return -1;
+    }
+    return result;
+}
