@@ -6,6 +6,7 @@
 typedef struct maze {
     vec_t size;
     vec_t pos;
+    vec_t start;
     vec_t win;
     unsigned char *connections;
 } maze_t;
@@ -30,6 +31,11 @@ void mzFree(maze_t *maze);
 
 // returns a 4x4 sample maze
 maze_t *mzGetSampleMaze();
+
+int mzStoreB(maze_t *maze, char *filename);
+
+// converts .mzh to .mzb
+int mzConvertFile(char *filename);
 
 // parses maze from filename
 maze_t *mzParse(char *filename);

@@ -14,3 +14,12 @@ You are a miner and your village desperatly needs your help. It is out of money 
 `c`: coin  
 `s`: secret (1 per match)  
 `<`, `>`, `v`, `^`: directional walls
+
+## Options
+```
+mazer
+    -c, --convert <filepath>
+        convert a .mzh to .mzb
+    
+
+```

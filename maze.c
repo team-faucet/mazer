@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "utils.h"
 
 void mzSetConnByIndex(maze_t *maze, int index, char val) {
@@ -43,7 +46,7 @@ bool mzGetCurrentConnectionInDirection(maze_t *maze, int dir) {
 }
 
 int mzGetNumberOfConnections(maze_t *maze) {
-    return (maze->size.x-1)*maze->size.y + maze->size.x*(maze->size.y-1);
+    return ((maze->size.x)-1)*((maze->size).y) + ((maze->size).x)*((maze->size).y-1);
 }
 
 maze_t *mzMalloc(vec_t dims) {
@@ -52,6 +55,7 @@ maze_t *mzMalloc(vec_t dims) {
     int n_conns = mzGetNumberOfConnections(maze);
     int n_bytes = n_conns/8 + (n_conns%8!=0);
     maze->connections = malloc(n_bytes);
+    memset(maze->connections, 0, n_bytes);
     return maze;
 }
 
@@ -88,7 +92,8 @@ maze_t *mzParseH(char *filename) {
     if(dims.x <1 || dims.y<1) {errorstr="maze dimensions have to be >0"; goto exit_error;}
     maze_t *m = mzMalloc(dims);
     if(!utilsNextCharIsIn(f, ",\n")) {{errorstr="assumed ',' or newline'"; goto exit_error;}}
-    if(utilsParseVec(f, &(m->pos))==-1) {errorstr="parsing pos vector"; goto exit_error;}
+    if(utilsParseVec(f, &(m->start))==-1) {errorstr="parsing pos vector"; goto exit_error;}
+    m->pos = m->start;
     if(!utilsNextCharIsIn(f, ",\n")) {{errorstr="assumed ',' or newline"; goto exit_error;}}
     if(utilsParseVec(f, &(m->win))==-1) {errorstr="parsing win vector"; goto exit_error;}
 
@@ -129,8 +134,9 @@ maze_t *mzParseH(char *filename) {
 
 
 struct mazeBinaryHead {
+    char fileinfo; //this is space reserved for identification that could be used in later versions
     vec_t size;
-    vec_t pos;
+    vec_t start;
     vec_t win;
 };
 
@@ -148,22 +154,22 @@ maze_t *mzParseB(char *filename) {
     // read in head
     struct mazeBinaryHead head;
     if(fread(&head, 1, sizeof(head), f) != sizeof(head)) {
-        snprintf(errorbuf, sizeof(errorbuf), "parsing head in file: %s\n", filename);
+        errorstr = "parsing head";
         goto exit_error;
     }
     if(head.size.x <1 || head.size.y<1) {errorstr="maze dimensions have to be >0"; goto exit_error;}
     // init maze_t
     maze_t *maze = mzMalloc(head.size);
-    maze->pos = head.pos;
+    maze->pos = head.start;
+    maze->start = head.start;
     maze->win = head.win;
     int n_conns = mzGetNumberOfConnections(maze);
     size_t n_bytes = n_conns/8 + (n_conns%8!=0);
     // read in connections
     if(fread(maze->connections, 1, n_bytes, f) != n_bytes) {
-        snprintf(errorbuf, sizeof(errorbuf), "parsing connections in file: %s\n", filename);
+        errorstr = "parsing connections";
         goto exit_error;
     }
-    
     fclose(f);
     return maze;
 
@@ -181,7 +187,7 @@ int mzStoreB(maze_t *maze, char *filename) {
     // convert maze into binaryMaze
     struct mazeBinaryHead head;
     head.size = maze->size;
-    head.pos = maze->pos;
+    head.start = maze->start;
     head.win = maze->win;
     
     int n_conns = mzGetNumberOfConnections(maze);
@@ -193,7 +199,7 @@ int mzStoreB(maze_t *maze, char *filename) {
         errorstr="writing head";
         goto exit_error;
     }
-    if(fwrite(&head, 1, n_bytes, f) != n_bytes) {
+    if(fwrite(maze->connections, 1, n_bytes, f) != n_bytes) {
         errorstr="writing connections";
         goto exit_error;
     }
@@ -207,9 +213,29 @@ int mzStoreB(maze_t *maze, char *filename) {
     return -1;
 }
 
-maze_t *mzParse(char *filename) {
+int mzConvertFile(char *filename){
     char *ext = strrchr(filename, '.');
-    if (ext==NULL){fprintf(stderr,"file extension not found, has to be .mzh or .mzb"); return NULL;}
+    if (ext==NULL){fprintf(stderr,"file extension not found, has to be .mzh or .mzb"); return -1;}
+
+    if(strcmp(ext, ".mzh")) {
+        fprintf(stderr, "error while converting: can currently only convert .mzh files\n");
+        return -1;
+    }
+    char nfilename[strlen(filename)+1];
+    strcpy(nfilename, filename);
+    nfilename[strlen(filename)-1] = 'b';
+    maze_t *maze = mzParseH(filename);
+    if(maze == NULL) return -1;
+    if(mzStoreB(maze, nfilename) == -1) return -1;
+    return 0;
+}
+
+maze_t *mzParse(char *filename) {
+    struct stat buf;
+    if(stat(filename, &buf) == -1) {perror("stat"); return NULL;}
+    if(!S_ISREG(buf.st_mode)) { fprintf(stderr, "%s is not a file\n", filename); return NULL;}
+    char *ext = strrchr(filename, '.');
+    if(ext==NULL){ fprintf(stderr, "file extension has to be .mzh or .mzb\n"); return NULL;}
 
 
     if(!strcmp(ext, ".mzh")) {
@@ -219,7 +245,7 @@ maze_t *mzParse(char *filename) {
         return mzParseB(filename);
     }
 
-    fprintf(stderr, "file extension has to be .mzh or .mzb");
+    fprintf(stderr, "file extension has to be .mzh or .mzb\n");
     return NULL;
 }
 
@@ -228,6 +254,7 @@ bool mzIsFinished(maze_t *maze) {
 }
 
 void mzPrintCurrentPos(maze_t *maze) {
+    printf("\n");
     printf("|"); for(int i=0; i < maze->size.x; i++) printf("---"); printf("|\n");
     for(int y=0; y < maze->size.y; y++) {
         printf("|");
@@ -265,7 +292,8 @@ void mzPrintCurrentRoom(maze_t *maze) {
 
     printf("#####       #####\n");
 
-    if(bot) printf("#######   #######\n#######   #######\n");
-    else printf("#################\n#################\n");
+    if(bot) printf("#######   #######\n#######   #######");
+    else printf("#################\n#################");
+    printf("\n");
 }
 
