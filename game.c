@@ -1,11 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "maze.h"
 
 
 void exitGame() {
     printf("\nYou pressed 'q'.\nExiting...\n");
     exit(EXIT_SUCCESS);
+}
+
+// returns duration in milliseconds
+int getmDurationSince(struct timeval time_start) {
+    struct timeval time_end;
+    if(gettimeofday(&time_end, NULL) == -1) {perror("gettimeofday"); exit(1);}
+    int duration = time_end.tv_sec - time_start.tv_sec;
+    int uduration = time_end.tv_usec - time_start.tv_usec;
+    return duration*1000 + uduration/1000;
 }
 
 char *getDirectionString(int dir) {
@@ -74,13 +84,15 @@ void play(maze_t *maze) {
     utilsClearScreen();
     printf("Hi! Welcome to mazer!\nYou are the 'x'.\nWalk to one of the next rooms with (w|a|s|d)\n");
     printf("Reach the star to win!\n");
+    printf("Do that as fast as you can.\n\n");
     printf("Press any button to start\n");
-    if(getc(stdin)=='q') exitGame();
+    getc(stdin);
     utilsClearScreen();
-    
     
     mzPrintCurrentPos(maze);
     mzPrintCurrentRoom(maze);
+    struct timeval time_start;
+    if(gettimeofday(&time_start, NULL) == -1) {perror("gettimeofday"); exit(1);}
     while(!mzIsFinished(maze)) {
         int dir = step(maze);
         utilsClearScreen();
@@ -89,9 +101,12 @@ void play(maze_t *maze) {
         printf("You went %s", getDirectionString(dir));
         fflush(stdout);
     }
+    
+    int mduration = getmDurationSince(time_start);
 
     printWinScreen();
     
+    printf("Time:\n%d.%03ds\n\n", mduration/1000, mduration);
     printf("press \"s\" to save the maze, press q to exit\n");
     printf("\n");
     int c;
